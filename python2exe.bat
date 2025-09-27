@@ -5,7 +5,7 @@ REM ========= User Config =========
 set "SCRIPT=boot_dtb_tool.py"
 set "EXE_BASENAME=dtb_selector"
 REM Optional: .ico icon (leave empty to skip)
-set "ICON="
+set "ICON=my.ico"
 REM Optional: UPX directory to compress (leave empty to skip)
 set "UPX_DIR="
 REM =================================

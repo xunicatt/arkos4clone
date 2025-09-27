@@ -17,6 +17,7 @@ Currently, I can only maintain the devices I personally own, but contributions a
 - **RX6H**
 - **A10Mini**
 - **R36S Clone [G80CAMB v1.2 0422|0423]**
+- **R36S Clone [V20 719M]**  [origin dtb]([EE-Clones-DTB/R36S EE-Clone/Stock (P4) [E93995-2022\] (2025) at main · Vi-K36/EE-Clones-DTB](https://github.com/Vi-K36/EE-Clones-DTB/tree/main/R36S EE-Clone/Stock (P4) [E93995-2022] (2025))
 
 ## What We Did
 
