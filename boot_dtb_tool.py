@@ -32,6 +32,65 @@ ALIASES = {
     "k36p7": "K36 Panel 7",
 }
 
+# 1.1) 新增：品牌映射（用于一级菜单分组）
+#      键为 consoles 下的真实目录名；值为品牌名
+BRAND_MAP = {
+    "mymini": "XiFan",
+    "r36max": "XiFan",
+    "r36pro": "XiFan",
+    "xf35h": "XiFan",
+    "xf40h": "XiFan",
+    "hg36": "Other",
+    "r36ultra": "Other",
+    "rx6h": "Other",
+    "k36s": "Other",
+    "r46h": "GameConsole",
+    "r36splus": "GameConsole",
+    "origin r36s panel 0": "GameConsole",
+    "origin r36s panel 1": "GameConsole",
+    "origin r36s panel 2": "GameConsole",
+    "origin r36s panel 3": "GameConsole",
+    "origin r36s panel 4": "GameConsole",
+    "origin r36s panel 5": "GameConsole",
+    "a10mini": "YMC",
+    "g80cambv12": "Clone",
+    "r36s v20 719m": "Clone",
+    "k36p7": "Clone",
+}
+
+def build_brand_index(items):
+    """
+    根据 BRAND_MAP 将 [(display, real)] 分组为 {brand: [(display, real), ...]}
+    未出现在 BRAND_MAP 的项，尝试从别名首段推断品牌；推断失败则归为 'Other'
+    """
+    brand_index = {}
+    for display, real in items:
+        brand = BRAND_MAP.get(real)
+        if not brand:
+            # 退化推断：从别名取第一种（遇到 | 取左侧），再取前两个词（以保留如 "R36S Clone"）
+            alias = ALIASES.get(real, real)
+            alias_first = alias.split("|")[0].strip()
+            parts = alias_first.split()
+            if len(parts) >= 2 and parts[1].lower() in {"clone", "panel"}:
+                brand = " ".join(parts[:2])
+            else:
+                brand = parts[0] if parts else "Other"
+        brand_index.setdefault(brand, []).append((display, real))
+    return brand_index
+
+
+def show_brand_menu(brand_index):
+    """
+    打印品牌菜单（包含每个品牌下的机型数量），返回品牌列表（用于索引）
+    """
+    brands = sorted(brand_index.keys())
+    print("\n🏷️ 选择品牌 / Choose a brand:")
+    for i, b in enumerate(brands, 1):
+        print(f"{i}. {b} ({len(brand_index[b])})")
+    print("0. Exit (or press q)")
+    return brands
+
+
 # 2) 排除规则（glob 通配，多条规则其一匹配即排除）
 EXCLUDE_PATTERNS = {
     "files", "kenrel", "logo",
@@ -342,6 +401,38 @@ def main():
     show_menu(items)
  
     choose_folder_and_copy(items, consoles_dir)
+    # 选择品牌方案 暂时不启用
+    # intro_and_wait()
+    # os.system("cls" if os.name == "nt" else "clear")
+
+    # # === 新增：先按品牌分组并选择品牌 ===
+    # brand_index = build_brand_index(items)
+    # brands = show_brand_menu(brand_index)
+
+    # # 非交互环境下直接退出（保持原有行为不变）
+    # if not sys.stdin.isatty():
+    #     return
+
+    # while True:
+    #     sel = input("\nEnter a number to choose a brand (0 to exit): ").strip().lower()
+    #     if sel in {"0", "q"}:
+    #         print("Exited.")
+    #         return
+    #     if not sel.isdigit():
+    #         print("⚠️ Please enter a valid number.")
+    #         continue
+    #     idx = int(sel)
+    #     if 1 <= idx <= len(brands):
+    #         chosen_brand = brands[idx - 1]
+    #         brand_items = brand_index[chosen_brand]
+    #         os.system("cls" if os.name == "nt" else "clear")
+    #         print(f"📦 品牌：{chosen_brand}（{len(brand_items)} 个机型）")
+    #         show_menu(brand_items)
+    #         # 二级菜单：选择机型后执行复制
+    #         choose_folder_and_copy(brand_items, consoles_dir)
+    #         return
+    #     else:
+    #         print("⚠️ Number out of range, try again.")
 
 if __name__ == "__main__":
     main()
