@@ -1,54 +1,192 @@
 package main
 
 import (
-    "bufio"
-    "errors"
-    "fmt"
-    "io"
-    "io/fs"
-    "os"
-    "os/exec"
-    "path/filepath"
-    "runtime"
-    "sort"
-    "strconv"
-    "strings"
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 )
-
 
 // ===================== 配置：别名 & 排除 =====================
 type ConsoleConfig struct {
 	RealName     string
-	DisplayName  string
-	Brand        string
+	BrandEntries []BrandEntry
 	ExtraSources []string
 }
 
-var Consoles = []ConsoleConfig{
-	{"mymini", "XiFan Mymini", "XiFan HandHelds", []string{"logo/480P/", "kenrel/common/"}},
-	{"r36max", "XiFan R36Max", "XiFan HandHelds", []string{"logo/720P/", "kenrel/common/"}},
-	{"r36pro", "XiFan R36Pro", "XiFan HandHelds", []string{"logo/480P/", "kenrel/common/"}},
-	{"xf35h", "XiFan XF35H", "XiFan HandHelds", []string{"logo/480P/", "kenrel/common/"}},
-	{"xf40h", "XiFan XF40H", "XiFan HandHelds", []string{"logo/720P/", "kenrel/common/"}},
-	{"hg36", "GameConsole HG36", "Other", []string{"logo/480p/", "kenrel/common/"}},
-	{"r36ultra", "GameConsole R36Ultra", "Other", []string{"logo/720P/", "kenrel/common/"}},
-	{"rx6h", "GameConsole RX6H", "Other", []string{"logo/480P/", "kenrel/common/"}},
-	{"k36s", "GameConsole K36S", "Other", []string{"logo/480P/", "kenrel/common/"}},
-	{"r46h", "GameConsole R46H", "GameConsole", []string{"logo/768p/", "kenrel/common/"}},
-	{"r36splus", "GameConsole R36sPlus", "GameConsole", []string{"logo/720p/", "kenrel/common/"}},
-	{"origin r36s panel 0", "GameConsole R36s Panel 0", "GameConsole", []string{"logo/480P/", "kenrel/common/"}},
-	{"origin r36s panel 1", "GameConsole R36s Panel 1", "GameConsole", []string{"logo/480P/", "kenrel/common/"}},
-	{"origin r36s panel 2", "GameConsole R36s Panel 2", "GameConsole", []string{"logo/480P/", "kenrel/common/"}},
-	{"origin r36s panel 3", "GameConsole R36s Panel 3", "GameConsole", []string{"logo/480P/", "kenrel/common/"}},
-	{"origin r36s panel 4", "GameConsole R36s Panel 4", "GameConsole", []string{"logo/480P/", "kenrel/common/"}},
-	{"origin r36s panel 5", "GameConsole R36s Panel 5", "GameConsole", []string{"logo/480P/", "kenrel/panel5/"}},
-	{"a10mini", "YMC A10MINI", "YMC", []string{"logo/480P/", "kenrel/common/"}},
-	{"g80cambv12", "R36S Clone G80camb v1.2", "Clone R36s", []string{"logo/480P/", "kenrel/common/"}},
-	{"r36s v20 719m", "R36S Clone V2.0 719M", "Clone R36s", []string{"logo/480P/", "kenrel/common/"}},
-	{"k36p7", "K36 Panel 7", "Clone R36s", []string{"logo/480P/", "kenrel/common/"}},
-	{"xgb36", "GameConsole XGB36", "Other", []string{"logo/480P/", "kenrel/common/"}},
+type BrandEntry struct {
+	Brand       string
+	DisplayName string
 }
 
+// 控制台配置
+var Consoles = []ConsoleConfig{
+	{
+		RealName: "mymini",
+		BrandEntries: []BrandEntry{
+			{Brand: "XiFan HandHelds", DisplayName: "XiFan Mymini"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "r36max",
+		BrandEntries: []BrandEntry{
+			{Brand: "XiFan HandHelds", DisplayName: "XiFan R36Max"},
+		},
+		ExtraSources: []string{"logo/720P/", "kenrel/common/"},
+	},
+	{
+		RealName: "r36pro",
+		BrandEntries: []BrandEntry{
+			{Brand: "XiFan HandHelds", DisplayName: "XiFan R36Pro"},
+			{Brand: "Clone R36s", DisplayName: "K36 Panel 1"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "xf35h",
+		BrandEntries: []BrandEntry{
+			{Brand: "XiFan HandHelds", DisplayName: "XiFan XF35H"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "xf40h",
+		BrandEntries: []BrandEntry{
+			{Brand: "XiFan HandHelds", DisplayName: "XiFan XF40H"},
+		},
+		ExtraSources: []string{"logo/720P/", "kenrel/common/"},
+	},
+	{
+		RealName: "k36s",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole K36S"},
+			{Brand: "Other", DisplayName: "GameConsole R36T"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "hg36",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole HG36"},
+		},
+		ExtraSources: []string{"logo/480p/", "kenrel/common/"},
+	},
+	{
+		RealName: "r36ultra",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole R36Ultra"},
+		},
+		ExtraSources: []string{"logo/720P/", "kenrel/common/"},
+	},
+	{
+		RealName: "rx6h",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole RX6H"},
+		},
+		ExtraSources: []string{"logo/480p/", "kenrel/common/"},
+	},
+	{
+		RealName: "r46h",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R46H"},
+		},
+		ExtraSources: []string{"logo/768p/", "kenrel/common/"},
+	},
+	{
+		RealName: "r36splus",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36sPlus"},
+		},
+		ExtraSources: []string{"logo/720p/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 0",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 0"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 1",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 1"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 2",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 2"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 3",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 3"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 4",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 4"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "origin r36s panel 5",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R36s Panel 5"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/panel5/"},
+	},
+	{
+		RealName: "a10mini",
+		BrandEntries: []BrandEntry{
+			{Brand: "YMC", DisplayName: "YMC A10MINI"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "g80cambv12",
+		BrandEntries: []BrandEntry{
+			{Brand: "Clone R36s", DisplayName: "R36S Clone G80camb v1.2"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "r36s v20 719m",
+		BrandEntries: []BrandEntry{
+			{Brand: "Clone R36s", DisplayName: "R36S Clone V2.0 719M"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "k36p7",
+		BrandEntries: []BrandEntry{
+			{Brand: "Clone R36s", DisplayName: "K36 Panel 7"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+	{
+		RealName: "xgb36",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole XGB36"},
+		},
+		ExtraSources: []string{"logo/480P/", "kenrel/common/"},
+	},
+}
+
+// 品牌列表
 var Brands = []string{
 	"XiFan HandHelds",
 	"GameConsole",
@@ -78,7 +216,6 @@ func supportsANSI() bool {
 	if (info.Mode() & os.ModeCharDevice) == 0 {
 		return false
 	}
-	// 简单启用：现代 Windows、Linux、macOS 终端通常支持 ANSI
 	return true
 }
 
@@ -112,18 +249,15 @@ func fancyHeader(title string) {
 }
 
 // ===================== 交互说明（双语） =====================
-// ======= 样式常量与辅助打印函数 =======
 var (
-	// 复用之前的 ansi* 变量：ansiBold, ansiCyan, ansiRed, ansiGreen, ansiBlue 等
 	HDR  = ansiBold + ansiGreen
 	BUL  = ansiBlue
 	WARN = ansiBold + ansiRed
 	EMP  = ansiBold + ansiCyan
 	NOTE = ansiCyan
-	DIM  = "" // 终端中没有专门的 dim 颜色时，留空或用 cyan 淡化；保持空以自动退回无色
+	DIM  = ""
 )
 
-// c: wrap string with style code (会根据 supportsANSI 自动降级)
 func c(s, style string) string {
 	if style == "" {
 		return s
@@ -131,24 +265,20 @@ func c(s, style string) string {
 	return colorWrap(s, style)
 }
 
-// p: 打印（等同于你写的 print(...) ）
 func p(s string) {
 	fmt.Println(s)
 }
 
-// praw: 打印不换色（如果需要直接原样输出）
 func praw(s string) {
 	fmt.Println(s)
 }
 
-// ===================== 更新后的 introAndWaitFancy（使用你给的文案样式） =====================
 func introAndWaitFancy() {
 	fancyHeader("DTB Selector - 请选择机型 / Select Your Console")
-	// 直接按你提供的行构造输出（中英并列）
 	p(c("\n================ Welcome 欢迎使用 ================", HDR))
 	p(c("说明：本系统目前只支持下列机型，如果你的 R36 克隆机不在列表中，则暂时无法使用。", BUL))
 	p(c("请不要使用原装 EmuELEC 卡中的 dtb 文件搭配本系统，否则会导致系统无法启动！", WARN))
-	p("") // 空行
+	p("")
 	p(c("选择机型前请阅读：", EMP))
 	p(c("  • 本工具会清理目标目录顶层的 .dtb/.ini/.orig/.tony 文件，并删除 BMPs 文件夹；", BUL))
 	p(c("  • 随后复制所选机型及额外映射资源。", BUL))
@@ -158,13 +288,12 @@ func introAndWaitFancy() {
 	p(c("  • This system currently only supports the listed R36 clones;", BUL))
 	p(c("    if your clone is not in the list, it is not supported yet.", BUL))
 	p(c("  • Do NOT use the dtb files from the stock EmuELEC card with this system — it will brick the boot.", WARN))
-	p("") // 空行
+	p("")
 	p(c("Before selecting a console:", EMP))
 	p(c("  • This tool cleans top-level .dtb/.ini/.orig/.tony files and removes the BMPs/ folder,", BUL))
 	p(c("    then copies the chosen console and any mapped extra sources.", BUL))
 	p(c("  • Press Enter to continue; type 'q' to quit.", NOTE))
 
-	// 等待用户输入或退出
 	fmt.Print(colorWrap("\n按 Enter 继续，或输入 ", ansiBold))
 	fmt.Print(colorWrap("q", ansiRed))
 	fmt.Print(colorWrap(" 退出：", ansiBold))
@@ -175,7 +304,6 @@ func introAndWaitFancy() {
 		os.Exit(0)
 	}
 }
-
 
 // ===================== 屏幕/终端检查 =====================
 func isTerminal() bool {
@@ -235,7 +363,7 @@ func cleanTargetDirectory() error {
 	fmt.Println()
 	fmt.Println(colorWrap("开始清理目标目录 (Cleaning target directory)...", ansiCyan))
 
-	patterns := []string{"*.dtb", "*.ini", "*.orig", "*.tony"}
+	patterns := []string{"*.dtb", "*.ini", "*.orig", "*.tony", ".cn"}
 	for _, pat := range patterns {
 		matches, err := filepath.Glob(pat)
 		if err != nil {
@@ -312,6 +440,11 @@ func copyDirectory(src, dst string) error {
 }
 
 // ===================== 菜单相关（双语） =====================
+type SelectedConsole struct {
+	Config      *ConsoleConfig
+	DisplayName string
+}
+
 func selectBrand() (string, error) {
 	clearScreen()
 	fmt.Println()
@@ -338,7 +471,7 @@ func selectBrand() (string, error) {
 	}
 }
 
-func selectConsole(brand string) (*ConsoleConfig, error) {
+func selectConsole(brand string) (*ConsoleConfig, string, error) {
 	clearScreen()
 	fmt.Println()
 	fmt.Println(colorWrap("┌────────────────────────────────────────┐", ansiCyan))
@@ -346,42 +479,87 @@ func selectConsole(brand string) (*ConsoleConfig, error) {
 	fmt.Println(colorWrap("└────────────────────────────────────────┘", ansiCyan))
 
 	var brandConsoles []ConsoleConfig
-	for _, c := range Consoles {
-		if c.Brand == brand {
-			brandConsoles = append(brandConsoles, c)
+
+	// 查找属于当前品牌的所有设备
+	for _, console := range Consoles {
+		for _, entry := range console.BrandEntries {
+			if entry.Brand == brand {
+				// 只添加一次，避免重复
+				alreadyAdded := false
+				for _, existing := range brandConsoles {
+					if existing.RealName == console.RealName {
+						alreadyAdded = true
+						break
+					}
+				}
+				if !alreadyAdded {
+					brandConsoles = append(brandConsoles, console)
+				}
+				break
+			}
 		}
 	}
-	sort.Slice(brandConsoles, func(i, j int) bool {
-		return brandConsoles[i].DisplayName < brandConsoles[j].DisplayName
-	})
 
 	if len(brandConsoles) == 0 {
 		fmt.Println(colorWrap("该品牌下没有机型 (No consoles found).", ansiRed))
 		_, _ = prompt("按 Enter 返回 (Press Enter to continue)...")
-		return nil, nil
+		return nil, "", nil
 	}
 
-	for i, c := range brandConsoles {
-		fmt.Printf("  %d. %s\n", i+1, c.DisplayName)
+	// 显示菜单
+	for i, console := range brandConsoles {
+		// 找到在当前品牌下的显示名称
+		var displayNames []string
+		for _, entry := range console.BrandEntries {
+			if entry.Brand == brand {
+				displayNames = append(displayNames, entry.DisplayName)
+			}
+		}
+
+		if len(displayNames) > 1 {
+			// 如果有多个显示名称，用斜杠分隔
+			fmt.Printf("  %d. %s", i+1, strings.Join(displayNames, " / "))
+		} else if len(displayNames) == 1 {
+			fmt.Printf("  %d. %s", i+1, displayNames[0])
+		}
+
+		// 显示备注（如果设备在其他品牌下有不同名称）
+		var otherBrandNames []string
+		for _, entry := range console.BrandEntries {
+			if entry.Brand != brand {
+				otherBrandNames = append(otherBrandNames, fmt.Sprintf("%s(%s)", entry.DisplayName, entry.Brand))
+			}
+		}
+		fmt.Println()
 	}
 	fmt.Printf("  %d. %s\n", 0, "Back/返回")
 
 	for {
 		choice, err := readIntChoice("\n选择序号 (Select number): ")
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		if choice == 0 {
-			return nil, nil
+			return nil, "", nil
 		}
 		if choice > 0 && choice <= len(brandConsoles) {
-			return &brandConsoles[choice-1], nil
+			selected := &brandConsoles[choice-1]
+			// 获取当前品牌下的显示名称
+			var currentBrandName string
+			for _, entry := range selected.BrandEntries {
+				if entry.Brand == brand {
+					currentBrandName = entry.DisplayName
+					break
+				}
+			}
+			fmt.Printf("Selected: %s\n", currentBrandName)
+			return selected, currentBrandName, nil
 		}
 		fmt.Println(colorWrap("选择无效，请重试 (Invalid selection).", ansiRed))
 	}
 }
 
-func showMenu() (*ConsoleConfig, error) {
+func showMenu() (*SelectedConsole, error) {
 	for {
 		brand, err := selectBrand()
 		if err != nil {
@@ -390,24 +568,25 @@ func showMenu() (*ConsoleConfig, error) {
 		if brand == "" {
 			return nil, nil
 		}
-		console, err := selectConsole(brand)
+		console, displayName, err := selectConsole(brand)
 		if err != nil {
 			return nil, err
 		}
 		if console != nil {
-			return console, nil
+			return &SelectedConsole{Config: console, DisplayName: displayName}, nil
 		}
 	}
 }
 
 // ===================== 复制逻辑 =====================
-func copySelectedConsole(console *ConsoleConfig) error {
-	if console == nil {
+func copySelectedConsole(selected *SelectedConsole) error {
+	if selected == nil || selected.Config == nil {
 		return errors.New("no console selected")
 	}
-	fmt.Printf("\n%s\n", colorWrap("开始复制 (Copying): "+console.DisplayName, ansiCyan))
 
-	srcPath := filepath.Join("consoles", console.RealName)
+	fmt.Printf("\n%s\n", colorWrap("开始复制 (Copying): "+selected.DisplayName, ansiCyan))
+
+	srcPath := filepath.Join("consoles", selected.Config.RealName)
 	if _, err := os.Stat(srcPath); os.IsNotExist(err) {
 		return fmt.Errorf("source directory not found: %s", srcPath)
 	}
@@ -417,7 +596,7 @@ func copySelectedConsole(console *ConsoleConfig) error {
 	}
 
 	fmt.Println(colorWrap("正在复制额外资源 (Copying extra resources)...", ansiCyan))
-	for _, extra := range console.ExtraSources {
+	for _, extra := range selected.Config.ExtraSources {
 		extraSrc := filepath.Join("consoles", extra)
 		if _, err := os.Stat(extraSrc); err == nil {
 			fmt.Printf("  Copying: %s\n", extra)
@@ -463,6 +642,7 @@ func selectLanguage() (string, error) {
 		}
 	}
 }
+
 // 创建语言标记文件
 func createLanguageFile(lang string) error {
 	if lang == "cn" {
@@ -476,19 +656,18 @@ func createLanguageFile(lang string) error {
 	return nil
 }
 
-
 // ===================== main =====================
 func main() {
 	clearScreen()
 	fmt.Println(colorWrap("DTB Selector Tool - Go Version", ansiBold+ansiGreen))
 	introAndWaitFancy()
 
-	console, err := showMenu()
+	selected, err := showMenu()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	if console == nil {
+	if selected == nil {
 		fmt.Println(colorWrap("Goodbye! 再见。", ansiGreen))
 		return
 	}
@@ -498,14 +677,14 @@ func main() {
 		return
 	}
 
-	if err := copySelectedConsole(console); err != nil {
+	if err := copySelectedConsole(selected); err != nil {
 		fmt.Printf("Error copying files: %v\n", err)
 		return
 	}
 
-	showSuccessFancy(console.DisplayName)
+	showSuccessFancy(selected.DisplayName)
 
-		// ===== 新增语言选择 =====
+	// ===== 新增语言选择 =====
 	lang, err := selectLanguage()
 	if err != nil {
 		fmt.Printf("Error selecting language: %v\n", err)
