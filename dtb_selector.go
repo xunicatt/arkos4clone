@@ -88,6 +88,13 @@ var Consoles = []ConsoleConfig{
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
 	{
+		RealName: "r36tmax",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole R36T MAX"},
+		},
+		ExtraSources: []string{"logo/720P/", "kernel/common/"},
+	},
+	{
 		RealName: "hg36",
 		BrandEntries: []BrandEntry{
 			{Brand: "Other", DisplayName: "GameConsole HG36"},

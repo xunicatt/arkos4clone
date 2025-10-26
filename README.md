@@ -14,6 +14,7 @@ Currently, I can only maintain the devices I personally own, but contributions a
 - **R36Ultra**[``V2 joyLed uncontrollable``]
 - **R36T**
 - **K36S**
+- **R36T Max**
 - **RX6H**
 - **A10Mini**
 - **R36S Clone [type1-5]** 
