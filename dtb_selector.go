@@ -187,6 +187,13 @@ var Consoles = []ConsoleConfig{
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
 	{
+		RealName: "clone type1 no amplifier and invert right",
+		BrandEntries: []BrandEntry{
+			{Brand: "Clone R36s", DisplayName: "Clone Type 1 Without Amplifier And Invert Right Joystick"},
+		},
+		ExtraSources: []string{"logo/480P/", "kernel/common/"},
+	},
+	{
 		RealName: "clone type2",
 		BrandEntries: []BrandEntry{
 			{Brand: "Clone R36s", DisplayName: "Clone Type 2"},
@@ -544,7 +551,7 @@ func selectConsole(brand string) (*ConsoleConfig, string, error) {
 	for i, option := range consoleOptions {
 		fmt.Printf("  %d. %s\n", i+1, option.displayName)
 	}
-	fmt.Printf("  %d. %s\n", 0, "Back/返回")
+	fmt.Printf("  %d. %s\n", 0, "Back / 返回")
 
 	for {
 		choice, err := readIntChoice("\n选择序号 (Select number): ")

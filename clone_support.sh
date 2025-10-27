@@ -117,7 +117,7 @@ echo "== 删除不需要的文件 =="
 sudo rm -rf "$MOUNT_DIR/boot/BMPs"
 sudo rm -rf "$MOUNT_DIR/boot/ScreenFiles"
 sudo rm -rf "$MOUNT_DIR/boot/boot.ini" $MOUNT_DIR/boot/*.dtb $MOUNT_DIR/boot/*.orig $MOUNT_DIR/boot/*.tony $MOUNT_DIR/boot/Image $MOUNT_DIR/boot/*.bmp $MOUNT_DIR/boot/WHERE_ARE_MY_ROMS.txt
-sudo sed -i "/title\=/c\title\=ArkOS 2.0 ($UPDATE_DATE)($MODDER)" "$MOUNT_DIR/root/usr/share/plymouth/themes/text.plymouth"
+sudo sed -i "/title\=/c\title\=ArkOS4Clone ($UPDATE_DATE)($MODDER)" "$MOUNT_DIR/root/usr/share/plymouth/themes/text.plymouth"
 cat $MOUNT_DIR/root/usr/share/plymouth/themes/text.plymouth
 sudo rm -rf "$MOUNT_DIR/root/opt/system/DeviceType"
 sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Video Boot/"
