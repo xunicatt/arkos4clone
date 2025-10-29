@@ -97,6 +97,7 @@ if [ "$(stat -c%s $MOUNT_DIR/root/roms.tar 2>/dev/null || echo 0)" -le $((100*10
   mkdir -p /home/lcdyk/arkos/tmproms/roms/hbmame
   tar -xf zulu11.48.21-ca-jdk11.0.11-linux_aarch64.tar.gz -C /home/lcdyk/arkos/tmproms/roms/j2me
   mv /home/lcdyk/arkos/tmproms/roms/j2me/zulu11.48.21-ca-jdk11.0.11-linux_aarch64 /home/lcdyk/arkos/tmproms/roms/j2me/jdk
+  sudo chown -R root:root /home/lcdyk/arkos/tmproms/roms/j2me/jdk
   echo "== 注入 portmaster =="
   sudo cp -rf ./PortMaster/* "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster/"
   sudo cp -rf ./PortMaster/PortMaster.sh "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster.sh"

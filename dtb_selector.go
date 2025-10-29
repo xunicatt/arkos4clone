@@ -187,8 +187,9 @@ var Consoles = []ConsoleConfig{
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
 	{
-		RealName: "clone type1 no amplifier and invert right",
+		RealName: "k36",
 		BrandEntries: []BrandEntry{
+			{Brand: "Kinhank", DisplayName: "K36 Origin Panel"},
 			{Brand: "Clone R36s", DisplayName: "Clone Type 1 Without Amplifier And Invert Right Joystick"},
 		},
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
@@ -235,6 +236,7 @@ var Brands = []string{
 	"XiFan HandHelds",
 	"GameConsole",
 	"YMC",
+	"Kinhank",
 	"Clone R36s",
 	"Other",
 }

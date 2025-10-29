@@ -239,6 +239,9 @@ if [[ ! -f "$CONSOLE_FILE" ]]; then
   msg "Wrote new console file: $CONSOLE_FILE -> $LABEL"
   apply_quirks_for "$LABEL"
   sleep 5
+  systemctl status systemd-journald.service systemd-journald.socket|| true
+  sudo systemctl unmask systemd-journald.service systemd-journald.socket|| true
+  sudo systemctl enable --now systemd-journald.service systemd-journald.socket|| true
 else
   CUR_VAL="$(tr -d '\r\n' < "$CONSOLE_FILE" || true)"
   if [[ "$CUR_VAL" == "$LABEL" ]]; then
