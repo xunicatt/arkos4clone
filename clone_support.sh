@@ -79,7 +79,7 @@ sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/pico8.sh" 2>/dev/null || true
 
 echo "== 注入核心 =="
 sudo cp -f ./mod_so/64/* "$MOUNT_DIR/root/home/ark/.config/retroarch/cores/"
-sudo cp -f ./mod_so/32/* "$MOUNT_DIR/root/home/ark/.config/retroarch/cores/"
+sudo cp -f ./mod_so/32/* "$MOUNT_DIR/root/home/ark/.config/retroarch32/cores/"
 sudo chown -R 1002:1002 $MOUNT_DIR/root/home/ark/.config/retroarch/cores/*
 sudo chown -R 1002:1002 $MOUNT_DIR/root/home/ark/.config/retroarch32/cores/*
 sudo cp -f ./replace_file/es_systems.cfg "$MOUNT_DIR/root/etc/emulationstation/"
@@ -88,6 +88,12 @@ sudo cp -f ./replace_file/emulationstation2.po "$MOUNT_DIR/root/usr/bin/emulatio
 
 sudo cp -f ./replace_file/es_input.cfg "$MOUNT_DIR/root/etc/emulationstation/"
 sudo chmod 777 "$MOUNT_DIR/root/etc/emulationstation/es_input.cfg" 2>/dev/null || true
+
+echo "== 调整drastic =="
+sudo rm -rf "$MOUNT_DIR/root/opt/drastic/*"
+sudo cp -f ./replace_file/drastic/* "$MOUNT_DIR/root/opt/drastic"
+sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/drastic/*
+sudo chmod 777 "$MOUNT_DIR/root/opt/drastic/* 2>/dev/null || true
 
 if [ "$(stat -c%s $MOUNT_DIR/root/roms.tar 2>/dev/null || echo 0)" -le $((100*1024*1024)) ]; then
   echo "== 复制 roms.tar 出来操作 =="

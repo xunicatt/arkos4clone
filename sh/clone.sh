@@ -26,6 +26,7 @@ declare -A dtb2label=(
   [rk3326-rx6h-linux.dtb]=rx6h
   [rk3326-k36s-linux.dtb]=k36s
   [rk3326-r36tmax-linux.dtb]=r36tmax
+  [rk3326-t16max-linux.dtb]=t16max
   [rk3326-r36ultra-linux.dtb]=r36ultra
   [rk3326-xgb36-linux.dtb]=xgb36
   [rk3326-a10mini-linux.dtb]=a10mini
@@ -44,6 +45,7 @@ declare -A console_profile=(
   [rx6h]=480p
   [k36s]=480p
   [r36tmax]=720p
+  [t16max]=720p
   [r36ultra]=720p
   [xgb36]=480p
   [a10mini]=480p
@@ -63,6 +65,7 @@ declare -A joy_conf_map=(
   [rx6h]=dual
   [k36s]=single
   [r36tmax]=dual
+  [t16max]=dual
   [r36ultra]=dual
   [xgb36]=single
   [a10mini]=none
@@ -82,6 +85,7 @@ declare -A ogage_conf_map=(
   [rx6h]=select
   [k36s]=happy5
   [r36tmax]=happy5
+  [t16max]=happy5
   [r36ultra]=happy5
   [xgb36]=happy5
   [a10mini]=happy5
@@ -122,6 +126,31 @@ cp_if_exists() {
     msg "Copied: $src -> $dst"
   else
     warn "Source not found, skip: $src"
+  fi
+}
+
+link_drastic_dir() {
+  local name="$1"
+  local src="/roms/nds/$name"
+  local dst="/opt/drastic/$name"
+
+  # 如果源目录不存在则创建一个空目录
+  if [[ ! -d "$src" ]]; then
+    msg "Source $src not found, creating it..."
+    sudo mkdir -p "$src" || warn "Failed to create $src"
+  fi
+
+  # 删除旧的目录或符号链接（不让失败导致脚本退出）
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    msg "Remove old $dst"
+    sudo rm -rf "$dst" || warn "Failed to remove $dst"
+  fi
+
+  # 创建新的符号链接
+  if sudo ln -s "$src" "$dst"; then
+    msg "Linked: $dst -> $src"
+  else
+    warn "Failed to create symlink: $dst -> $src"
   fi
 }
 
@@ -202,27 +231,18 @@ apply_quirks_for() {
   local base="$QUIRKS_DIR/$dtbval"
   adjust_per_joy_conf "$dtbval"
   apply_hotkey_conf "$dtbval"
-  copy_file
+  apply_profile_assets
 }
 
-install_profile_assets() {
-  local prof="$1"
-  case "$prof" in
-    480p|720p|768p)
-      cp_if_exists "$QUIRKS_DIR/$prof/351Files" "/opt/351Files" "no"
-      cp_if_exists "$QUIRKS_DIR/$prof/drastic/TF1/libSDL2-2.0.so.0.3000.2" "/opt/drastic/TF1/" "yes"
-      cp_if_exists "$QUIRKS_DIR/$prof/drastic/TF2/libSDL2-2.0.so.0.3000.2" "/opt/drastic/TF2/" "yes"
-      cp_if_exists "$QUIRKS_DIR/$prof/drastic/bg" "/roms/nds" "no"
-      [[ -d "/roms2/nds/bg" ]] && cp_if_exists "$QUIRKS_DIR/$prof/drastic/bg" "/roms2/nds" "no" || true
-      ;;
-    *) msg "No profile assets for: $prof" ;;
-  esac
+apply_profile_assets() {
+  local cur prof
+  cur="$(tr -d '\r\n' < "$CONSOLE_FILE" 2>/dev/null || true)"
+  [[ -n "$cur" ]] || return 0
+  prof="${console_profile[$cur]}"
+  [[ "$prof" =~ ^(480p|720p|768p)$ ]] && cp_if_exists "$QUIRKS_DIR/$prof/351Files" "/opt/351Files" "no" \
+    || msg "No profile assets for: ${prof:-$cur}"
 }
 
-copy_file() {
-  [[ -f "$CONSOLE_FILE" ]] && cur_console="$(tr -d '\r\n' < "$CONSOLE_FILE")" || cur_console=""
-  [[ -n "$cur_console" ]] && install_profile_assets "${console_profile[$cur_console]}"
-}
 
 
 # =============== 执行开始 ===============
@@ -235,6 +255,10 @@ if [[ ! -f "$CONSOLE_FILE" ]]; then
   echo "   arkos for clone lcdyk  ..."
   echo "==============================="
   sleep 2
+  link_drastic_dir backup
+  link_drastic_dir cheats
+  link_drastic_dir savestates
+  link_drastic_dir slot2
   echo "$LABEL" > "$CONSOLE_FILE"
   msg "Wrote new console file: $CONSOLE_FILE -> $LABEL"
   apply_quirks_for "$LABEL"
@@ -297,13 +321,16 @@ fi
 
 sudo modprobe -v mt7610u_sta || true
 # 开机将音频设置为SPK如果是OFF的话
-STATE=$(amixer get 'Playback Path' | grep -oP "Item0: '\K\w+")
-if [ "$STATE" = "OFF" ]; then
-    echo "Playback Path is OFF, switching to SPK..."
-    amixer set 'Playback Path' 'SPK' || true
-    sudo alsactl store || true
+STATE="$(
+  amixer get 'Playback Path' 2>/dev/null | grep -oP "Item0: '\K\w+" || true
+)"
+
+if [[ "$STATE" = "OFF" ]]; then
+  echo "Playback Path is OFF, switching to SPK..."
+  amixer set 'Playback Path' 'SPK' || true
+  sudo alsactl store || true
 else
-    echo "Playback Path is already set to $STATE, no change."
+  echo "Playback Path is already set to ${STATE:-UNKNOWN}, no change."
 fi
 
 if [[ -f "/boot/.cn" ]]; then
