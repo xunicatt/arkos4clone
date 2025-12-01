@@ -6,16 +6,19 @@ QUIRKS_DIR="/home/ark/.quirks"     # 目标机型库
 CONSOLE_FILE="/boot/.console"      # 当前生效机型标记
 
 # =============== 小工具函数（英文输出 / 中文注释）===============
-msg()  { echo "[clone.sh] $*"; }
-warn() { echo "[clone.sh][WARN] $*" >&2; }
-err()  { echo "[clone.sh][ERR ] $*" >&2; }
+LOG_FILE="/boot/clone_log.txt"
+# 每次开机先清空一次，避免一直追加
+: > "$LOG_FILE" 2>/dev/null || true
+msg()  { echo "[clone.sh] $*" | tee -a "$LOG_FILE"; }
+warn() { echo "[clone.sh][WARN] $*" | tee -a "$LOG_FILE" >&2; }
+err()  { echo "[clone.sh][ERR ] $*" | tee -a "$LOG_FILE" >&2; }
 
 # 读当前 .console 内容，小工具函数，避免重复
 get_console_label() {
   tr -d '\r\n' < "$CONSOLE_FILE" 2>/dev/null || true
 }
 
-# 先读取已有 .console，作为默认机型，避免未知 DTB 把原有配置改成 r36s
+# 先读取已有 .console，r36s作为默认机型
 CUR_VAL="$(get_console_label)"
 DEFAULT_LABEL="${CUR_VAL:-r36s}"
 
@@ -33,6 +36,7 @@ if [[ -r "$BOOTINI" ]]; then
     | xargs -r basename \
     || true
   )"
+  msg "boot.ini readable, parsed DTB='${DTB:-<empty>}'"
 else
   warn "boot.ini not readable: $BOOTINI"
 fi
@@ -58,6 +62,7 @@ declare -A dtb2label=(
   [rk3326-xgb36-linux.dtb]=xgb36
   [rk3326-a10mini-linux.dtb]=a10mini
   [rk3326-g350-linux.dtb]=g350
+  [rk3326-u8-linux.dtb]=u8
 )
 
 declare -A console_profile=(
@@ -81,6 +86,7 @@ declare -A console_profile=(
   [xgb36]=480p
   [a10mini]=480p
   [g350]=480p
+  [u8]=800p480
   [r36s]=480p
 )
 
@@ -105,6 +111,7 @@ declare -A joy_conf_map=(
   [xgb36]=single
   [a10mini]=none
   [g350]=dual
+  [u8]=dual
   [r36s]=dual
 )
 
@@ -129,7 +136,13 @@ declare -A ogage_conf_map=(
   [xgb36]=happy5
   [a10mini]=happy5
   [g350]=happy5
+  [u8]=happy5
   [r36s]=happy5
+)
+
+declare -A rotate_map=(
+  [u8]=270
+  [r50s]=270
 )
 
 rk915_set=("xf40h" "dc40v" "xf35h" "dc35v" "r36ultra" "k36s" "r36tmax") # 按需增删
@@ -272,6 +285,7 @@ apply_profile_assets() {
 
   prof="${console_profile[$cur]:-}"
   if [[ "$prof" =~ ^(480p|720p|768p)$ ]]; then
+    msg "Applying 351Files profile: $prof (console=$cur)"
     cp_if_exists "$QUIRKS_DIR/$prof/351Files" "/opt/351Files" "no"
   else
     msg "No profile assets for: ${prof:-$cur}"
@@ -292,21 +306,67 @@ apply_es_input() {
   done
 
   if [[ "$use_ga" == "true" ]]; then
+    msg "apply_es_input: console=$cur_console use=odroidgo advance"
     cp_if_exists "$QUIRKS_DIR/es_input_ga.cfg" "/etc/emulationstation/es_input.cfg" "yes"
     cp_if_exists "$QUIRKS_DIR/retroarch64_ga.cfg" "/home/ark/.config/retroarch/retroarch.cfg" "yes"
     cp_if_exists "$QUIRKS_DIR/retroarch32_ga.cfg" "/home/ark/.config/retroarch32/retroarch.cfg" "yes"
   else
+    msg "apply_es_input: console=$cur_console use=odroidgo super"
     cp_if_exists "$QUIRKS_DIR/es_input_gs.cfg" "/etc/emulationstation/es_input.cfg" "yes"
   fi
+}
+
+apply_emulationstation() {
+  if [[ -f "/boot/.cn" ]]; then
+    cp_if_exists "$QUIRKS_DIR/emulationstation/emulationstation.cn"     "/usr/bin/emulationstation/emulationstation"       "yes"
+  else
+    cp_if_exists "$QUIRKS_DIR/emulationstation/emulationstation.origin"     "/usr/bin/emulationstation/emulationstation"       "yes"
+  fi
+}
+
+apply_rotate_file() {
+  local dtbval="$1"
+  local prof="${rotate_map[$dtbval]:-0}"
+  msg "apply_rotate_file: console=$dtbval rotation=$prof"
+  case "$prof" in
+    270)
+      msg "Using SDL=rotate270 + RetroArch=270 for console=$dtbval"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/32/libSDL2-2.0.so.0.3000.10.rotate270" "/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3000.10" "yes"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/64/libSDL2-2.0.so.0.3000.10.rotate270" "/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3000.10" "yes"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2.so /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (64)"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3000.10 /usr/lib/aarch64-linux-gnu/libSDL2.so || warn "ln failed: libSDL2.so (64)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2.so /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (32)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3000.10 /usr/lib/arm-linux-gnueabihf/libSDL2.so || warn "ln failed: libSDL2.so (32)"
+
+      cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch32.270" "/opt/retroarch/bin/retroarch32" "yes"
+	    cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch.270" "/opt/retroarch/bin/retroarch" "yes"
+      ;;
+    *)
+      msg "Using SDL=0deg + RetroArch=0deg for console=$dtbval"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/32/libSDL2-2.0.so.0.3000.10.r36s" "/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3000.10" "yes"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/64/libSDL2-2.0.so.0.3000.10.r36s" "/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3000.10" "yes"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2.so /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (64)"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3000.10 /usr/lib/aarch64-linux-gnu/libSDL2.so || warn "ln failed: libSDL2.so (64)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2.so /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (32)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3000.10 /usr/lib/arm-linux-gnueabihf/libSDL2.so || warn "ln failed: libSDL2.so (32)"
+
+      cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch32.r36s" "/opt/retroarch/bin/retroarch32" "yes"
+	    cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch.r36s" "/opt/retroarch/bin/retroarch" "yes"
+      ;;
+  esac
+  sudo chmod 777 /opt/retroarch/bin/* || true
 }
 
 # 依据 LABEL 执行
 apply_quirks_for() {
   local dtbval="$1"
+  msg "apply_quirks_for: LABEL=$dtbval"
   adjust_per_joy_conf "$dtbval"
   apply_hotkey_conf "$dtbval"
   apply_profile_assets
   apply_es_input
+  apply_emulationstation
+  apply_rotate_file "$dtbval"
 }
 
 # =============== 执行开始 ===============
@@ -314,7 +374,7 @@ msg "DTB filename: ${DTB:-<empty>}, LABEL: $LABEL"
 
 # 按规则处理 /boot/.console
 if [[ ! -f "$CONSOLE_FILE" ]]; then
-  clear
+  printf '\033c'
   echo "==============================="
   echo "   arkos for clone lcdyk  ..."
   echo "==============================="
@@ -323,7 +383,8 @@ if [[ ! -f "$CONSOLE_FILE" ]]; then
   link_drastic_dir cheats
   link_drastic_dir savestates
   link_drastic_dir slot2
-  echo "$LABEL" > "$CONSOLE_FILE"
+  echo "$LABEL" | sudo tee "$CONSOLE_FILE" > /dev/null || warn "Failed to write $CONSOLE_FILE"
+  msg "First boot for clone script, initial LABEL=$LABEL"
   msg "Wrote new console file: $CONSOLE_FILE -> $LABEL"
   apply_quirks_for "$LABEL"
   sleep 5
@@ -335,6 +396,7 @@ else
   if [[ "$CUR_VAL" == "$LABEL" ]]; then
     msg "Console unchanged ($CUR_VAL); nothing to do."
   else
+    msg "Console change requested: old=${CUR_VAL:-<none>} new=$LABEL"
     (
       # ==== 所有输出都到 tty1 ====
       # 复位/清屏并回到左上角
@@ -384,7 +446,7 @@ if [[ -f "$CONSOLE_FILE" ]]; then
   done
 fi
 
-sudo modprobe -v mt7610u_sta || true
+# sudo modprobe -v mt7610u_sta || true
 
 # 开机将音频设置为 SPK 如果是 OFF 的话
 STATE="$(
@@ -401,6 +463,7 @@ fi
 
 # 简体中文首启配置
 if [[ -f "/boot/.cn" ]]; then
+  msg "Apply first-boot zh-CN localization"
   if grep -q "Language" /home/ark/.emulationstation/es_settings.cfg; then
     sed -i -e '/<string name\=\"Language/c\<string name\=\"Language\" value\=\"zh-CN\" \/>' /home/ark/.emulationstation/es_settings.cfg || true
   else
@@ -436,5 +499,5 @@ if [[ -x /home/ark/.config/lastgame.sh ]]; then
   sudo -u ark /home/ark/.config/lastgame.sh
 fi
 
-msg "Done."
+msg "Done. LABEL=$LABEL, CONSOLE_FILE=$(get_console_label)"
 exit 0

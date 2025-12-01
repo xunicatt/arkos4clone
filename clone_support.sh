@@ -132,7 +132,7 @@ sudo cp -r "./replace_file/tools/Enable Quick Mode.sh" "$MOUNT_DIR/root/usr/loca
 sudo cp -r "./replace_file/tools/Disable Quick Mode.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
 
 echo "== 分支更新文件 =="
-sudo cp -r ./replace_file/arkos_update_files/emulationstation "$MOUNT_DIR/root/usr/bin/emulationstation/emulationstation"
+# sudo cp -r ./replace_file/arkos_update_files/emulationstation "$MOUNT_DIR/root/usr/bin/emulationstation/emulationstation"
 
 echo "== 删除不需要的文件 =="
 sudo rm -rf "$MOUNT_DIR/boot/BMPs" 2>/dev/null || true
