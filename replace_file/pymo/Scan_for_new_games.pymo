@@ -1,0 +1,33 @@
+#!/bin/bash
+
+shopt -s nullglob
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+printf "\033c" > /dev/tty1
+
+cd "$script_dir" || {
+  exit 1
+}
+changed=0
+for d in */ ; do
+    dirname="${d%/}"
+    case "$dirname" in
+        *.pymo)
+            echo "skip：$dirname" >> /dev/tty1
+            continue
+            ;;
+    esac
+    newname="${dirname}.pymo"
+    if [[ -e "$newname" ]]; then
+        echo "skip：$dirname → $newname" >> /dev/tty1
+        continue
+    fi
+
+    echo "rename：$dirname → $newname" >> /dev/tty1
+    mv -- "$dirname" "$newname"
+    changed=1
+done
+echo -e "\nFinished scanning the pymo folder for games." >> /dev/tty1
+echo "Please update the game list or restart EmulationStation." >> /dev/tty1
+sleep 3
+printf "\033c" > /dev/tty1

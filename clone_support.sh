@@ -96,7 +96,9 @@ sudo cp -f ./mod_so/32/* "$MOUNT_DIR/root/home/ark/.config/retroarch32/cores/"
 sudo chown -R 1002:1002 $MOUNT_DIR/root/home/ark/.config/retroarch/cores/*
 sudo chown -R 1002:1002 $MOUNT_DIR/root/home/ark/.config/retroarch32/cores/*
 sudo cp -f ./replace_file/es_systems.cfg "$MOUNT_DIR/root/etc/emulationstation/"
+sudo cp -f ./replace_file/es_systems.cfg.dual "$MOUNT_DIR/root/etc/emulationstation/"
 sudo chmod 777 "$MOUNT_DIR/root/etc/emulationstation/es_systems.cfg" 2>/dev/null || true
+sudo chmod 777 "$MOUNT_DIR/root/etc/emulationstation/es_systems.cfg.dual" 2>/dev/null || true
 sudo cp -f ./replace_file/emulationstation2.po "$MOUNT_DIR/root/usr/bin/emulationstation/resources/locale/zh-CN/"
 
 sudo rm -rf 777 "$MOUNT_DIR/root/etc/emulationstation/es_input.cfg" 2>/dev/null || true
@@ -106,7 +108,7 @@ sudo rm -rf "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 sudo mkdir -p "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 
 sudo cp -a ./replace_file/drastic/. "$MOUNT_DIR/root/opt/drastic/" 2>/dev/null || true
-
+sudo rm -rf "$MOUNT_DIR/root/opt/drastic/patch" 2>/dev/null || true
 sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 sudo chmod -R 775 "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 
@@ -122,6 +124,8 @@ if [ "$(stat -c%s $MOUNT_DIR/root/roms.tar 2>/dev/null || echo 0)" -le $((100*10
   echo "== 注入 portmaster =="
   sudo cp -rf ./PortMaster/* "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster/"
   sudo cp -rf ./PortMaster/PortMaster.sh "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster.sh"
+  mkdir -p /home/lcdyk/arkos/tmproms/roms/pymo
+  sudo cp -rf  ./replace_file/pymo/Scan_for_new_games.pymo "/home/lcdyk/arkos/tmproms/roms/pymo/"
   sudo tar -cf /home/lcdyk/arkos/roms.tar -C /home/lcdyk/arkos/tmproms .
   sudo rm -rf /home/lcdyk/arkos/tmproms
   sudo cp /home/lcdyk/arkos/roms.tar "$MOUNT_DIR/root/"
@@ -135,6 +139,13 @@ echo "== 调整retrorun =="
 sudo cp -r ./replace_file/retrorun/retrorun32 "$MOUNT_DIR/root/usr/local/bin/"
 sudo cp -r ./replace_file/retrorun/retrorun "$MOUNT_DIR/root/usr/local/bin/"
 
+echo "== 注入pymo =="
+sudo cp -r ./replace_file/pymo/cpymo "$MOUNT_DIR/root/usr/local/bin/"
+sudo cp -r ./replace_file/pymo/pymo.sh "$MOUNT_DIR/root/usr/local/bin/"
+sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/cpymo"
+sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/pymo.sh"
+sudo cp -r ./replace_file/pymo/pymo "$MOUNT_DIR/root/tempthemes/es-theme-nes-box/"
+
 echo "== ogage快捷键复制 =="
 sudo cp -r ./replace_file/ogage "$MOUNT_DIR/root/usr/local/bin/"
 sudo cp -r ./replace_file/ogage "$MOUNT_DIR/root/home/ark/.quirks/"
@@ -145,8 +156,11 @@ sudo chmod 644 "$MOUNT_DIR/root/lib/systemd/system/mpv.service" 2>/dev/null || t
 sudo rm "$MOUNT_DIR/root/etc/systemd/system/batt_led.service" 2>/dev/null || true
 sudo rm "$MOUNT_DIR/root/etc/systemd/system/ddtbcheck.service" 2>/dev/null || true
 sudo cp -r "./replace_file/tools/Enable Quick Mode.sh" "$MOUNT_DIR/root/opt/system/Advanced/" 2>/dev/null || true
+sudo cp -r "./replace_file/tools/Switch to SD2 for Roms.sh" "$MOUNT_DIR/root/opt/system/Advanced/" 2>/dev/null || true
 sudo cp -r "./replace_file/tools/Enable Quick Mode.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
 sudo cp -r "./replace_file/tools/Disable Quick Mode.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
+sudo cp -r "./replace_file/tools/Switch to main SD for Roms.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
+sudo cp -r "./replace_file/tools/Switch to SD2 for Roms.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
 
 echo "== 临时更新 =="
 sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/mediaplayer.sh"
