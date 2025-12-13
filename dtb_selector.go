@@ -314,6 +314,13 @@ var Consoles = []ConsoleConfig{
 		},
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
+	{
+		RealName: "rg36",
+		BrandEntries: []BrandEntry{
+			{Brand: "Other", DisplayName: "GameConsole RG36"},
+		},
+		ExtraSources: []string{"logo/480P/", "kernel/common/"},
+	},
 }
 
 // 品牌列表
