@@ -321,6 +321,13 @@ var Consoles = []ConsoleConfig{
 		},
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
+	{
+		RealName: "rgb20s",
+		BrandEntries: []BrandEntry{
+			{Brand: "Powkiddy", DisplayName: "Powkiddy RGB20S"},
+		},
+		ExtraSources: []string{"logo/480P/", "kernel/common/"},
+	},
 }
 
 // 品牌列表
@@ -329,6 +336,7 @@ var Brands = []string{
 	"AISLPC",
 	"Batlexp",
 	"Kinhank",
+	"Powkiddy",
 	"Clone R36s",
 	"GameConsole",
 	"SaySouce R36s",

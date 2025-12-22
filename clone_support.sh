@@ -165,6 +165,10 @@ sudo cp -r "./replace_file/tools/Disable Quick Mode.sh" "$MOUNT_DIR/root/usr/loc
 sudo cp -r "./replace_file/tools/Switch to main SD for Roms.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
 sudo cp -r "./replace_file/tools/Switch to SD2 for Roms.sh" "$MOUNT_DIR/root/usr/local/bin/" 2>/dev/null || true
 
+echo "== 删除logo随机 =="
+sudo sed -i '/imageshift\.sh/d' "$MOUNT_DIR/root/var/spool/cron/crontabs/root" 2>/dev/null || true
+sudo rm "$MOUNT_DIR/root/home/ark/.config/imageshift.sh" 2>/dev/null || true
+
 echo "== 临时更新 =="
 sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/mediaplayer.sh"
 

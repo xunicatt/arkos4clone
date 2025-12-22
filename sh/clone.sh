@@ -67,6 +67,7 @@ declare -A dtb2label=(
   [rk3326-dr28s-linux.dtb]=dr28s
   [rk3326-d007-linux.dtb]=d007
   [rk3326-r50s-linux.dtb]=r50s
+  [rk3326-rgb20s-linux.dtb]=rgb20s
 )
 
 declare -A console_profile=(
@@ -94,6 +95,7 @@ declare -A console_profile=(
   [dr28s]=480p
   [d007]=480p
   [r50s]=854p480
+  [rgb20s]=480p
   [r36s]=480p
 )
 
@@ -122,6 +124,7 @@ declare -A joy_conf_map=(
   [dr28s]=none
   [d007]=dual
   [r50s]=dual
+  [rgb20s]=dual
   [r36s]=dual
 )
 
@@ -150,6 +153,7 @@ declare -A ogage_conf_map=(
   [dr28s]=happy5
   [d007]=select
   [r50s]=happy5
+  [rgb20s]=happy5
   [r36s]=happy5
 )
 
