@@ -72,6 +72,9 @@ elif [ -f "/boot/.console" ]; then
         mymini|xgb36)
             DEVICENAME="Mymini"
             ;;
+        a10miniv2)
+            DEVICENAME="XF28"
+            ;;
         *)
             DEVICENAME="RG351MP"
             ;;
@@ -143,6 +146,9 @@ elif [ -f "/boot/.console" ]; then
             ;;
         mymini|xgb36)
             DEVICENAME="Mymini"
+            ;;
+        a10miniv2)
+            DEVICENAME="XF28"
             ;;
         *)
             DEVICENAME="RG351MP"

@@ -223,6 +223,13 @@ var Consoles = []ConsoleConfig{
 		ExtraSources: []string{"logo/480P/", "kernel/common/"},
 	},
 	{
+		RealName: "a10miniv2",
+		BrandEntries: []BrandEntry{
+			{Brand: "YMC", DisplayName: "YMC A10MINI V2"},
+		},
+		ExtraSources: []string{"logo/540P/", "kernel/common/"},
+	},
+	{
 		RealName: "k36",
 		BrandEntries: []BrandEntry{
 			{Brand: "Kinhank", DisplayName: "K36 Origin Panel"},

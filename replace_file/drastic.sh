@@ -37,16 +37,23 @@ fi
 
 sudo ./gptokeyb &
 
-if [[ -f "/boot/.console" ]]; then
-  CUR_VAL="$(tr -d '\r\n' < "/boot/.console" || true)"
-  if [[ "$CUR_VAL" == "u8" || "$CUR_VAL" == "dr28s" || "$CUR_VAL" == "r50s" ]]; then
-    LD_PRELOAD=./libs/libSDL2-2.0.so.0.3200.10.rotated ./drastic "$1"
-  else
-    LD_PRELOAD=./libs/libSDL2-2.0.so.0.3200.10 ./drastic "$1"
+if [[ -f "/opt/drastic/on" ]]; then
+  if [[ -f "/boot/.console" ]]; then
+    CUR_VAL="$(tr -d '\r\n' < "/boot/.console" || true)"
+    if [[ "$CUR_VAL" == "u8" || "$CUR_VAL" == "dr28s" || "$CUR_VAL" == "r50s" ]]; then
+      LD_PRELOAD=./libs/libSDL2-2.0.so.0.3200.10.rotated ./drastic "$1"
+    else
+      LD_PRELOAD=./libs/libSDL2-2.0.so.0.3200.10 ./drastic "$1"
+    fi
   fi
+else
+  ./drastic "$1"
 fi
 
-sudo kill -9 $(pidof gptokeyb)
+GPTOKEYB_PID="$(pidof gptokeyb 2>/dev/null || true)"
+if [[ -n "$GPTOKEYB_PID" ]]; then
+  sudo kill -9 $GPTOKEYB_PID
+fi
 
 sudo killall python3
 

@@ -61,6 +61,7 @@ declare -A dtb2label=(
   [rk3326-r36ultra-linux.dtb]=r36ultra
   [rk3326-xgb36-linux.dtb]=xgb36
   [rk3326-a10mini-linux.dtb]=a10mini
+  [rk3326-a10mini-v2-linux.dtb]=a10miniv2
   [rk3326-g350-linux.dtb]=g350
   [rk3326-u8-linux.dtb]=u8
   [rk3326-u8-v2-linux.dtb]=u8
@@ -90,6 +91,7 @@ declare -A console_profile=(
   [r36ultra]=720p
   [xgb36]=480p
   [a10mini]=480p
+  [a10miniv2]=540p
   [g350]=480p
   [u8]=800p480
   [dr28s]=480p
@@ -119,6 +121,7 @@ declare -A joy_conf_map=(
   [r36ultra]=dual
   [xgb36]=single
   [a10mini]=none
+  [a10miniv2]=none
   [g350]=dual
   [u8]=dual
   [dr28s]=none
@@ -148,6 +151,7 @@ declare -A ogage_conf_map=(
   [r36ultra]=happy5
   [xgb36]=happy5
   [a10mini]=happy5
+  [a10miniv2]=happy5
   [g350]=happy5
   [u8]=happy5
   [dr28s]=happy5
@@ -161,6 +165,7 @@ declare -A rotate_map=(
   [u8]=270
   [dr28s]=270
   [r50s]=270
+  [a10miniv2]=180
 )
 
 rk915_set=("xf40h" "dc40v" "xf35h" "dc35v" "r36ultra" "k36s" "r36tmax") # 按需增删
@@ -302,11 +307,11 @@ apply_profile_assets() {
   [[ -n "$cur" ]] || return 0
 
   prof="${console_profile[$cur]:-}"
-  if [[ "$prof" =~ ^(480p|720p|768p)$ ]]; then
+  if [[ -n "$prof" ]]; then
     msg "Applying 351Files profile: $prof (console=$cur)"
     cp_if_exists "$QUIRKS_DIR/$prof/351Files" "/opt/351Files" "no"
   else
-    msg "No profile assets for: ${prof:-$cur}"
+    msg "No profile assets for: $cur"
   fi
 }
 
@@ -350,6 +355,18 @@ apply_rotate_file() {
 
       cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch32.270" "/opt/retroarch/bin/retroarch32" "yes"
 	    cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch.270" "/opt/retroarch/bin/retroarch" "yes"
+      ;;
+    180)
+      msg "Using SDL=rotate180 + RetroArch=180 for console=$dtbval"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/32/libSDL2-2.0.so.0.3200.10.rotate180" "/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3200.10" "yes"
+      cp_if_exists "$QUIRKS_DIR/rotate/sdl2/64/libSDL2-2.0.so.0.3200.10.rotate180" "/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3200.10" "yes"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2.so /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (64)"
+      sudo ln -sfv /usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.3200.10 /usr/lib/aarch64-linux-gnu/libSDL2.so || warn "ln failed: libSDL2.so (64)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2.so /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0 || warn "ln failed: libSDL2-2.0.so.0 (32)"
+      sudo ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.3200.10 /usr/lib/arm-linux-gnueabihf/libSDL2.so || warn "ln failed: libSDL2.so (32)"
+
+      cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch32.180" "/opt/retroarch/bin/retroarch32" "yes"
+	    cp_if_exists "$QUIRKS_DIR/rotate/retroarch/retroarch.180" "/opt/retroarch/bin/retroarch" "yes"
       ;;
     *)
       msg "Using SDL=0deg + RetroArch=0deg for console=$dtbval"

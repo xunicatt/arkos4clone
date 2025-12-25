@@ -103,6 +103,9 @@ elif [[ $1 == "retrorun" ]]; then
           mymini|xgb36)
               DEVICENAME="Mymini"
               ;;
+          a10miniv2)
+            DEVICENAME="XF28"
+            ;;
           *)
               DEVICENAME="RG351MP"
               ;;
@@ -185,6 +188,9 @@ else
           mymini|xgb36)
               DEVICENAME="Mymini"
               ;;
+          a10miniv2)
+            DEVICENAME="XF28"
+            ;;
           *)
               DEVICENAME="RG351MP"
               ;;

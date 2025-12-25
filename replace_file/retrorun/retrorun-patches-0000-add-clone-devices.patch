@@ -1,8 +1,8 @@
 diff --git a/src/globals.cpp b/src/globals.cpp
-index 0d81cfa..93c3024 100755
+index 0d81cfa..3706433 100755
 --- a/src/globals.cpp
 +++ b/src/globals.cpp
-@@ -381,8 +381,14 @@ bool isRG353M()
+@@ -381,8 +381,17 @@ bool isRG353M()
  {
      return checkDeviceName((char *)"RG353M"); 
  }
@@ -12,6 +12,9 @@ index 0d81cfa..93c3024 100755
 +bool isMymini() {
 +    return checkDeviceName((char *)"Mymini"); 
 +}
++bool isXF28() {
++    return checkDeviceName((char *)"XF28"); 
++}
  bool hasDeviceRotatedScreen(){
 -   return  isRG351V() || isRG351MP() || isRG503() || isRG353V() || isRG353M();
 +   return  isRG351V() || isRG351MP() || isRG503() || isRG353V() || isRG353M() || isMymini();
@@ -19,20 +22,21 @@ index 0d81cfa..93c3024 100755
  bool wideScreenNotRotated(){
      return  isRG503();
 diff --git a/src/globals.h b/src/globals.h
-index 5ed5ff6..f8fdf8b 100755
+index 5ed5ff6..3fcd397 100755
 --- a/src/globals.h
 +++ b/src/globals.h
-@@ -195,6 +195,8 @@ bool isRG552();
+@@ -195,6 +195,9 @@ bool isRG552();
  bool isRG503();
  bool isRG353V();
  bool isRG353M();
 +bool isU8();
 +bool isMymini();
++bool isXF28();
  bool hasDeviceRotatedScreen();
  bool wideScreenNotRotated();
  void resetDeviceName();
 diff --git a/src/main.cpp b/src/main.cpp
-index 35bbcad..5a1e5e2 100755
+index 35bbcad..aee9362 100755
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -2151,7 +2151,7 @@ int main(int argc, char *argv[])
@@ -40,7 +44,51 @@ index 35bbcad..5a1e5e2 100755
      if (!gpio_joypad)
      {
 -        if (isRG351MP() || isRG552() )
-+        if (isRG351MP() || isRG552() || isU8() )
++        if (isRG351MP() || isRG552() || isU8() || isXF28() )
          {
              gpio_joypad = true;
          }
+diff --git a/src/video-helper.cpp b/src/video-helper.cpp
+index 7d78975..f5ed17f 100755
+--- a/src/video-helper.cpp
++++ b/src/video-helper.cpp
+@@ -137,7 +137,18 @@ go2_rotation getBlitRotation()
+ 
+         if (!isTate() && tateState != REVERSED)
+         {
+-            return (hasDeviceRotatedScreen()) ? GO2_ROTATION_DEGREES_0 : GO2_ROTATION_DEGREES_270;
++            if (hasDeviceRotatedScreen()) 
++            {
++                return GO2_ROTATION_DEGREES_0;
++            }
++            else if (isXF28())
++            {
++                return GO2_ROTATION_DEGREES_180;
++            }
++            else
++            {
++                return GO2_ROTATION_DEGREES_270;
++            }
+         }
+         if (tateState == REVERSED)
+         {
+@@ -172,7 +183,18 @@ go2_rotation getRotation()
+     { // landscape
+         if (!isTate() && tateState != REVERSED)
+         {
+-            return (hasDeviceRotatedScreen()) ? GO2_ROTATION_DEGREES_0 : GO2_ROTATION_DEGREES_270;
++            if (hasDeviceRotatedScreen())
++            {
++                return GO2_ROTATION_DEGREES_0;
++            }
++            else if (isXF28())
++            {
++                return GO2_ROTATION_DEGREES_180;
++            }
++            else
++            {
++                return GO2_ROTATION_DEGREES_270;
++            }
+         }
+         if (tateState == REVERSED)
+         {

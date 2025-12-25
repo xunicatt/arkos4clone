@@ -114,6 +114,7 @@ sudo rm -rf "$MOUNT_DIR/root/opt/drastic/patch" 2>/dev/null || true
 sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 sudo chmod -R 775 "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 sudo rm -rf "$MOUNT_DIR/root/opt/drastic/patch"
+sudo cp -a ./replace_file/nds_sh/* "$MOUNT_DIR/root/opt/system/Advanced/NDS Overlays/" 2>/dev/null || true
 
 if [ "$(stat -c%s $MOUNT_DIR/root/roms.tar 2>/dev/null || echo 0)" -le $((100*1024*1024)) ]; then
   echo "== 复制 roms.tar 出来操作 =="
