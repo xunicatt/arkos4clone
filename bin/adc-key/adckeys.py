@@ -38,14 +38,11 @@ def main(arguments):
 
             # Simulate the release of the two buttons
             write_ev_key_event(input_device, BTN_START, 0)
-        elif argument == "startselect":
+        elif argument == "startselect_press":
             # Simulate the press of two buttons simultaneously
             write_ev_key_event(input_device, BTN_SELECT, 1)
             write_ev_key_event(input_device, BTN_START, 1)
-
-            # wait for 100 ms
-            time.sleep(0.1)
-
+        elif argument == "startselect_release":
             # Simulate the release of the two buttons
             write_ev_key_event(input_device, BTN_SELECT, 0)
             write_ev_key_event(input_device, BTN_START, 0)

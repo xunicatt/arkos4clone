@@ -69,10 +69,10 @@ elif [ -f "/boot/.console" ]; then
         u8|r50s|dr28s)
             DEVICENAME="U8"
             ;;
-        mymini|xgb36)
-            DEVICENAME="Mymini"
-            ;;
         a10miniv2)
+            DEVICENAME="A10miniv2"
+            ;;
+        xf28)
             DEVICENAME="XF28"
             ;;
         *)
@@ -144,10 +144,10 @@ elif [ -f "/boot/.console" ]; then
         u8|r50s|dr28s)
             DEVICENAME="U8"
             ;;
-        mymini|xgb36)
-            DEVICENAME="Mymini"
-            ;;
         a10miniv2)
+            DEVICENAME="A10miniv2"
+            ;;
+        xf28)
             DEVICENAME="XF28"
             ;;
         *)

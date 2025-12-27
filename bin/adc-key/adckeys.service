@@ -4,7 +4,8 @@ Description=External service
 [Service]
 ExecStart=/usr/local/bin/adckeys.sh
 Restart=always
-Type=idle
+Type=simple
+RestartSec=0.5
 
 [Install]
 WantedBy=multi-user.target
