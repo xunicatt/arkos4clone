@@ -13,6 +13,122 @@ msg()  { echo "[clone.sh] $*" | tee -a "$LOG_FILE"; }
 warn() { echo "[clone.sh][WARN] $*" | tee -a "$LOG_FILE" >&2; }
 err()  { echo "[clone.sh][ERR ] $*" | tee -a "$LOG_FILE" >&2; }
 
+# =============== OTA：开机自动检测并执行 /roms/update.tar ===============
+maybe_apply_ota_update() {
+  local tar_path=""
+  local tmpdir="/home/ark/.ota_update"
+  local TTY="/dev/tty1"
+
+  # 优先 roms，其次 roms2
+  if [[ -f "/roms/update.tar" ]]; then
+    tar_path="/roms/update.tar"
+  elif [[ -f "/roms2/update.tar" ]]; then
+    tar_path="/roms2/update.tar"
+  else
+    return 0
+  fi
+
+  msg "OTA package found: $tar_path"
+
+  # 准备 OTA 目录
+  sudo rm -rf "$tmpdir" 2>/dev/null || true
+  sudo mkdir -p "$tmpdir" || {
+    err "Failed to create OTA dir: $tmpdir"
+    return 0
+  }
+
+  # ===== 显示 OTA 头 =====
+  {
+    printf '\033c' 2>/dev/null || true
+    echo "==============================="
+    echo "        ArkOS4Clone OTA        "
+    echo "==============================="
+    echo
+    echo "[OTA] Package:"
+    echo "  $tar_path"
+    echo
+    echo "[OTA] Workdir:"
+    echo "  $tmpdir"
+    echo
+    echo "[OTA] Step 1/2: Extracting update.tar"
+    echo "[OTA] (Do NOT power off)"
+    echo
+  } > "$TTY"
+
+  msg "OTA extracting to: $tmpdir"
+
+  # ===== 解压：必须有“活着”的输出 =====
+  if tar --help 2>/dev/null | grep -q -- '--checkpoint'; then
+    # 每 200 个条目输出一次
+    if ! sudo tar -xf "$tar_path" -C "$tmpdir" \
+        --checkpoint=200 \
+        --checkpoint-action=exec='sh -c "echo \"[OTA] extracting... ($TAR_CHECKPOINT files)\""' \
+        2>&1 | tee -a "$LOG_FILE" > "$TTY"; then
+      err "OTA extract failed"
+      echo "[OTA] Extract FAILED. See $LOG_FILE" > "$TTY"
+      sudo rm -rf "$tmpdir" 2>/dev/null || true
+      return 0
+    fi
+  else
+    # fallback（极少数情况）
+    echo "[OTA] extracting... please wait." > "$TTY"
+    if ! sudo tar -xf "$tar_path" -C "$tmpdir" \
+         2>&1 | tee -a "$LOG_FILE" >> "$TTY"; then
+      err "OTA extract failed"
+      echo "[OTA] Extract FAILED. See $LOG_FILE" > "$TTY"
+      sudo rm -rf "$tmpdir" 2>/dev/null || true
+      return 0
+    fi
+  fi
+
+  {
+    echo
+    echo "[OTA] Step 1/2: Extract OK"
+    echo
+    echo "[OTA] Step 2/2: Running install.sh"
+    echo
+  } > "$TTY"
+
+  # ===== 执行 install.sh =====
+  if [[ ! -f "$tmpdir/install.sh" ]]; then
+    err "install.sh not found in OTA"
+    echo "[OTA] install.sh NOT FOUND" > "$TTY"
+    sudo rm -rf "$tmpdir" 2>/dev/null || true
+    return 0
+  fi
+
+  sudo chmod +x "$tmpdir/install.sh" 2>/dev/null || true
+
+  if ! sudo bash "$tmpdir/install.sh" \
+       2>&1 | tee -a "$LOG_FILE" >> "$TTY"; then
+    err "OTA install failed"
+    echo "[OTA] Install FAILED. See $LOG_FILE" >> "$TTY"
+    sudo rm -rf "$tmpdir" 2>/dev/null || true
+    return 0
+  fi
+
+  # ===== 成功收尾 =====
+  sudo rm -f "$tar_path" 2>/dev/null || true
+  sudo rm -rf "$tmpdir" 2>/dev/null || true
+  sudo rm -rf /boot/.console 2>/dev/null || true
+  sync || true
+
+  {
+    echo
+    echo "[OTA] SUCCESS"
+    echo "[OTA] Update package removed"
+    for i in {30..1}; do
+      echo "[OTA] Powering off in ${i}s... Please remove the SD card and re-run DTB_SELECTOR."
+      sleep 1
+    done
+  } >> "$TTY"
+
+  msg "OTA applied successfully, rebooting"
+  sleep 2
+  poweroff -f || true
+  exit 0
+}
+
 # 读当前 .console 内容，小工具函数，避免重复
 get_console_label() {
   tr -d '\r\n' < "$CONSOLE_FILE" 2>/dev/null || true
@@ -400,7 +516,7 @@ apply_quirks_for() {
 
 # =============== 执行开始 ===============
 msg "DTB filename: ${DTB:-<empty>}, LABEL: $LABEL"
-
+maybe_apply_ota_update
 # 按规则处理 /boot/.console
 if [[ ! -f "$CONSOLE_FILE" ]]; then
   printf '\033c'
